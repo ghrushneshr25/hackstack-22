@@ -1,0 +1,29 @@
+.header {
+    background-color: #0f1111;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+.logo {
+    width: 75px;
+    object-fit: contain;
+    margin-left: 20px;
+    margin-right: 20px;
+    padding: 5px;
+}
+
+.header-title p{
+    font-size: 30px;
+    color: white;
+}
+
+.header-end {
+    color: white;
+    margin-left: 20px;
+    margin-right: 20px;
+    padding: 5px;
+}
