@@ -367,7 +367,7 @@ export default () => {
 
   return (
     <>
-      <Header accountAddress={accountAddress} />
+      <Header accountAddress={accountAddress} role={"Consumer"} />
       <div className="consumer-row1">
         <ReceiveProductConsumerComponent />
         <CollectibleForSaleByCustomerComponent />

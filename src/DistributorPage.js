@@ -317,7 +317,7 @@ export default () => {
 
   return (
     <>
-      <Header accountAddress={accountAddress} />
+      <Header accountAddress={accountAddress} role={"Distributor"} />
       <div className="distributor-row1">
         <ReceiveProductDistributorComponent />
         <ForSaleByDistributorComponent />

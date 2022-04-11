@@ -7,6 +7,7 @@ import { CONTRACTADDRESS } from "./constants";
 import { useState } from "react";
 import Header from "./Header";
 import "./css/main.css";
+import Footer from "./Footer";
 
 export default () => {
   const [accountAddress, setAccountAddress] = useState();
@@ -226,7 +227,7 @@ export default () => {
 
   return (
     <>
-      <Header accountAddress={accountAddress} />
+      <Header accountAddress={accountAddress} role={"Owner"} />
       <div className="owner-row1">
         <AddManufacturerComponent />
         <AddDistributorComponent />
@@ -236,6 +237,7 @@ export default () => {
       <div>
         <FindProductComponent />
       </div>
+      <Footer />
     </>
   );
 };

@@ -19,8 +19,13 @@ const Header = (props) => {
         </p>
       </div>
       <div className="header-end">
-        <p>{props.accountAddress}</p>
-        <DateTime />
+        <p>
+          {props.accountAddress}
+          <br></br>
+          {props.role}
+          <br></br>
+          <DateTime />
+        </p>
       </div>
     </nav>
   );
