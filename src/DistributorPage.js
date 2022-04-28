@@ -155,7 +155,7 @@ export default () => {
     const submitValue = async () => {
       let output = await shippedByDistributor(productId, shippedToAddress);
       if (output) {
-        alert("Product Added for Sale");
+        alert("Product Added for Shipping");
       } else {
         alert("Transaction Failed, check authentication once");
       }
@@ -290,7 +290,7 @@ export default () => {
     if (output.length == 0) alert("No Shipped Products");
     else {
       setShippedProducts(output);
-      shippedDisplay(true);
+      setShippedDisplay(true);
     }
   };
 

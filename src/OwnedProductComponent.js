@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import Carousel from "react-simply-carousel";
 
 export default (props) => {
-  console.log(props.owned);
-  const [activeSlide, setActiveSlide] = useState(0);
+  console.log(props.owned.length);
+  let active = props.owned.length < 5 ? props.owned.length : 5;
+  const [activeSlide, setActiveSlide] = useState(active);
 
   return (
     <div>

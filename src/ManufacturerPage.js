@@ -55,6 +55,7 @@ export default () => {
     collectible,
     weight
   ) => {
+    if (collectible == "false") collectible = false;
     let transaction = await supplyChainContract.methods
       .producebymanufacturer(
         productName,
@@ -203,7 +204,7 @@ export default () => {
     const submitValue = async () => {
       let output = await shippedByManufacturer(productId, shippedToAddress);
       if (output) {
-        alert("Product Added for Sale");
+        alert("Product Added for Shipping");
       } else {
         alert("Transaction Failed, check authentication once");
       }

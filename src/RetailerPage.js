@@ -8,6 +8,7 @@ import ProductDetailsComponent from "./ProductDetailsComponent";
 import Header from "./Header";
 import { OWNERADDRESS, CONTRACTADDRESS } from "./constants";
 import { useState } from "react";
+import Footer from "./Footer";
 const web3_utils = require("web3-utils");
 
 export default () => {
@@ -151,7 +152,7 @@ export default () => {
     const submitValue = async () => {
       let output = await shippedByRetailer(productId, shippedToAddress);
       if (output) {
-        alert("Product Added for Sale");
+        alert("Product Added for Shipping");
       } else {
         alert("Transaction Failed, check authentication once");
       }
@@ -278,7 +279,7 @@ export default () => {
     if (output.length == 0) alert("No Shipped Products");
     else {
       setShippedProducts(output);
-      shippedDisplay(true);
+      setShippedDisplay(true);
     }
   };
 
@@ -324,6 +325,7 @@ export default () => {
       <div>
         <FindProductComponent />
       </div>
+      <Footer />
     </>
   );
 };

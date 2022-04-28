@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
+// // SPDX-License-Identifier: UNLICENSED
+
 pragma solidity >=0.4.24;
 
 //contracts
@@ -12,7 +13,6 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
     mapping(uint256 => Item) items;
     mapping(address => totalItems) ownership;
     mapping(address => totalItems) shipped;
-    //mapping(uint256 => composite) mappingComposite;
 
     uint256 randNonce = 0;
 
@@ -51,28 +51,26 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
     }
 
     enum State {
-        SProducedByManufacturer, //0
-        SForSaleByManufacturer, //1
-        SShippedByManufacturer, //2
-        SReceivedByDistributor, //3
-        SForSaleByDistributor, //4
-        SShippedByDistributor, //5
-        SReceivedByRetailer, //6
-        SForSaleByRetailer, //7
-        SShippedByRetailer, //8
-        SReceivedByCustomer, //9
-        SCollectibleForSaleByCustomer, //10
-        SShippedByCustomer, //11
-        SReceivedCollectibleByCustomer //12
+        SProducedByManufacturer,
+        SForSaleByManufacturer,
+        SShippedByManufacturer,
+        SReceivedByDistributor,
+        SForSaleByDistributor,
+        SShippedByDistributor,
+        SReceivedByRetailer,
+        SForSaleByRetailer,
+        SShippedByRetailer,
+        SReceivedByCustomer,
+        SCollectibleForSaleByCustomer,
+        SShippedByCustomer,
+        SReceivedCollectibleByCustomer
     }
 
     State constant defaultState = State.SProducedByManufacturer;
-
     struct totalItems {
         uint256 count;
         uint256[] itemUin;
     }
-
     struct Item {
         uint256 uin;
         string productName;
@@ -90,9 +88,6 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         uint256 productHash;
         State productState;
     }
-
-    //Events
-
     event EProducedByManufacturer(
         uint256 indexed uin,
         uint256 timeStamp,
@@ -173,21 +168,11 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         address caller
     );
 
-    //Is Amount Equal
     modifier paidEnough(uint256 _price) {
         require(msg.value >= _price);
         _;
     }
 
-    //Return Extra value
-    modifier checkValue(uint256 _upc, address payable addressToFund) {
-        uint256 _price = items[_upc].productPrice;
-        uint256 amountToReturn = msg.value - _price;
-        addressToFund.transfer(amountToReturn);
-        _;
-    }
-
-    //Item State Modifiers
     modifier MProducedByManufacturer(uint256 _uin) {
         require(items[_uin].productState == State.SProducedByManufacturer);
         _;
@@ -238,6 +223,11 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         _;
     }
 
+    modifier isCurrentOwner(uint256 _uin) {
+        require(msg.sender == items[_uin].CurrentOwner);
+        _;
+    }
+
     modifier MCollectibleForSaleByCustomer(uint256 _uin) {
         require(
             items[_uin].productState == State.SCollectibleForSaleByCustomer
@@ -263,37 +253,22 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
     }
 
     modifier MVerifyCaller(uint256 _uin) {
-        require(
-            items[_uin].productHash ==
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            _uin,
-                            items[_uin].CurrentOwner,
-                            msg.sender,
-                            items[_uin].productName
-                        )
-                    )
-                )
-        );
+        require(items[_uin].productHash == generateHash(_uin, msg.sender));
         _;
     }
 
-    function getEntity() public view returns (uint256) {
-        if (isManufacturer(msg.sender)) {
-            return 1;
-        } else if (isDistributor(msg.sender)) {
-            return 2;
-        } else if (isRetailer(msg.sender)) {
-            return 3;
-        } else if (isConsumer(msg.sender)) {
-            return 4;
-        } else {
-            return 5;
-        }
+    function generateHash(uint256 uin, address shipTo)
+        public
+        returns (uint256)
+    {
+        return
+            uint256(
+                keccak256(
+                    abi.encodePacked(uin, items[uin].CurrentOwner, shipTo)
+                )
+            );
     }
 
-    // Step1
     function producebymanufacturer(
         string memory _ProductName,
         string memory _ProductDesc,
@@ -326,10 +301,10 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         return (uin);
     }
 
-    //Step2
     function forsalebymanufacturer(uint256 uin, uint256 price)
         public
         onlyManufacturer(msg.sender)
+        isCurrentOwner(uin)
         MProducedByManufacturer(uin)
     {
         items[uin].visibility = true;
@@ -338,11 +313,10 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         emit EForSaleByManufacturer(uin, block.timestamp, msg.sender, price);
     }
 
-    //Step3
-
     function shippedbymanufacturer(uint256 uin, address payable shipTo)
         public
         onlyManufacturer(msg.sender)
+        isCurrentOwner(uin)
         onlyDistributor(shipTo)
         MForSaleByManufacturer(uin)
     {
@@ -350,20 +324,9 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         items[uin].ShipTo = shipTo;
         shipped[shipTo].count++;
         shipped[shipTo].itemUin.push(uin);
-        items[uin].productHash = uint256(
-            keccak256(
-                abi.encodePacked(
-                    uin,
-                    items[uin].CurrentOwner,
-                    shipTo,
-                    items[uin].productName
-                )
-            )
-        );
+        items[uin].productHash = generateHash(uin, shipTo);
         emit EShippedByManufacturer(uin, block.timestamp, msg.sender, shipTo);
     }
-
-    //Step4
 
     function receivedbydistributor(uint256 uin)
         public
@@ -388,10 +351,10 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         emit EReceivedByDistributor(uin, block.timestamp, msg.sender);
     }
 
-    //Step5
     function forsalebydistributor(uint256 uin, uint256 price)
         public
         onlyDistributor(msg.sender)
+        isCurrentOwner(uin)
         MReceivedByDistributor(uin)
     {
         items[uin].visibility = true;
@@ -400,10 +363,10 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         emit EForSaleByDistributor(uin, block.timestamp, msg.sender, price);
     }
 
-    //Step6
     function shippedbydistributor(uint256 uin, address payable shipTo)
         public
         onlyDistributor(msg.sender)
+        isCurrentOwner(uin)
         onlyRetailer(shipTo)
         MForSaleByDistributor(uin)
     {
@@ -411,20 +374,10 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         items[uin].ShipTo = shipTo;
         shipped[shipTo].count++;
         shipped[shipTo].itemUin.push(uin);
-        items[uin].productHash = uint256(
-            keccak256(
-                abi.encodePacked(
-                    uin,
-                    items[uin].CurrentOwner,
-                    shipTo,
-                    items[uin].productName
-                )
-            )
-        );
+        items[uin].productHash = generateHash(uin, shipTo);
         emit EShippedByDistributor(uin, block.timestamp, msg.sender, shipTo);
     }
 
-    //Step7
     function receivedbyretailer(uint256 uin)
         public
         payable
@@ -447,10 +400,10 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         emit EReceivedByRetailer(uin, block.timestamp, msg.sender);
     }
 
-    //Step8
     function forsalebyretailer(uint256 uin, uint256 price)
         public
         onlyRetailer(msg.sender)
+        isCurrentOwner(uin)
         MReceivedByRetailer(uin)
     {
         items[uin].productState = State.SForSaleByRetailer;
@@ -458,10 +411,10 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         emit EForSaleByRetailer(uin, block.timestamp, msg.sender, price);
     }
 
-    //Step9
     function shippedbyretailer(uint256 uin, address payable shipTo)
         public
         onlyRetailer(msg.sender)
+        isCurrentOwner(uin)
         onlyConsumer(shipTo)
         MForSaleByRetailer(uin)
     {
@@ -469,20 +422,10 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         items[uin].ShipTo = shipTo;
         shipped[shipTo].count++;
         shipped[shipTo].itemUin.push(uin);
-        items[uin].productHash = uint256(
-            keccak256(
-                abi.encodePacked(
-                    uin,
-                    items[uin].CurrentOwner,
-                    shipTo,
-                    items[uin].productName
-                )
-            )
-        );
+        items[uin].productHash = generateHash(uin, shipTo);
         emit EShippedByRetailer(uin, block.timestamp, msg.sender, shipTo);
     }
 
-    //Step10
     function receivedbycustomer(uint256 uin)
         public
         payable
@@ -505,9 +448,9 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         emit EReceivedByCustomer(uin, block.timestamp, msg.sender);
     }
 
-    //Step11
     function collectibleforsalebycustomer(uint256 uin, uint256 price)
         public
+        isCurrentOwner(uin)
         onlyConsumer(payable(msg.sender))
         MReceivedByCustomer(uin)
         MisCollectible(uin)
@@ -523,9 +466,9 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         );
     }
 
-    //Step12
     function shippedcollectiblebycustomer(uint256 uin, address payable ShipTo)
         public
+        isCurrentOwner(uin)
         onlyConsumer(payable(msg.sender))
         onlyConsumer(ShipTo)
         MCollectibleForSaleByCustomer(uin)
@@ -534,16 +477,7 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         items[uin].ShipTo = ShipTo;
         shipped[ShipTo].count++;
         shipped[ShipTo].itemUin.push(uin);
-        items[uin].productHash = uint256(
-            keccak256(
-                abi.encodePacked(
-                    uin,
-                    items[uin].CurrentOwner,
-                    ShipTo,
-                    items[uin].productName
-                )
-            )
-        );
+        items[uin].productHash = generateHash(uin, ShipTo);
         emit EShippedtheCollectibleByCustomer(
             uin,
             block.timestamp,
@@ -551,8 +485,6 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
             ShipTo
         );
     }
-
-    //Step13
 
     function receivedcollectiblebycustomer(uint256 uin)
         public
@@ -563,7 +495,7 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         MShippedCollectibleByCustomer(uin)
         MVerifyCaller(uin)
     {
-        items[uin].productState = State.SReceivedCollectibleByCustomer;
+        items[uin].productState = State.SReceivedByCustomer;
         items[uin].visibility = false;
         items[uin].CurrentOwner.transfer(items[uin].productPrice);
         ownership[items[uin].CurrentOwner].count--;
@@ -576,31 +508,6 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         ownership[msg.sender].itemUin.push(uin);
         emit EReceivedCollectibleByCustomer(uin, block.timestamp, msg.sender);
     }
-
-    //Step 14
-    // function productDetail(uint256 uin)
-    //     public
-    //     view
-    //     returns (
-    //         uint256,
-    //         string memory,
-    //         string memory,
-    //         address,
-    //         address,
-    //         uint256,
-    //         uint256
-    //     )
-    // {
-    //     return (
-    //         items[uin].uin,
-    //         items[uin].productName,
-    //         items[uin].productDescription,
-    //         items[uin].manufacturerId,
-    //         items[uin].CurrentOwner,
-    //         items[uin].productDate,
-    //         items[uin].productPrice
-    //     );
-    // }
 
     function productDetail(uint256 uin) public view returns (Item memory) {
         return (items[uin]);
@@ -624,16 +531,3 @@ contract SupplyChain is Retailer, Consumer, Manufacturer, Distributor {
         return item;
     }
 }
-
-//         uint256 uin
-//         string productName;
-//         string productDescription;
-//         address manufacturerId;
-//         address CurrentOwner;
-//         uint256 productDate;
-//         bool collectible;
-//         bool composite;
-//         uint weight;
-//         uint productPrice;
-//         byte32 productHash;
-//         State productState;

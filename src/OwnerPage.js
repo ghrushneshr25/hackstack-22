@@ -87,7 +87,7 @@ export default () => {
         <h4>Add Distributor</h4>
         <input
           type="text"
-          placeholder="Manufacturer Address"
+          placeholder="Distributor Address"
           onChange={(e) => setAddress(e.target.value)}
         />
         <button onClick={submitValue}>Submit</button>
@@ -117,7 +117,7 @@ export default () => {
         <h4>Add Retailer</h4>
         <input
           type="text"
-          placeholder="Manufacturer Address"
+          placeholder="Retailer Address"
           onChange={(e) => setAddress(e.target.value)}
         />
         <button onClick={submitValue}>Submit</button>
@@ -147,7 +147,7 @@ export default () => {
         <h4>Add Consumer</h4>
         <input
           type="text"
-          placeholder="Manufacturer Address"
+          placeholder="Consumer Address"
           onChange={(e) => setAddress(e.target.value)}
         />
         <button onClick={submitValue}>Submit</button>

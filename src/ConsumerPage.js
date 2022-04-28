@@ -270,7 +270,7 @@ export default () => {
     if (output.length == 0) alert("No Shipped Products");
     else {
       setShippedProducts(output);
-      shippedDisplay(true);
+      setShippedDisplay(true);
     }
   };
 
